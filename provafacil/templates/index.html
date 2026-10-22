@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ modulo_info.nome }}</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --pn: #ffffff;
+      --ink: #0f172a;
+      --mut: #64748b;
+      --ln: #e2e8f0;
+      --ac: #0284c7;
+      --acs: #e0f2fe;
+      --ok: #16a34a;
+      --ok-bg: #dcfce7;
+      --wr: #d97706;
+      --wr-bg: #fef3c7;
+      --er: #dc2626;
+      --er-bg: #fee2e2;
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      --btn-text: #ffffff;
+    }
+
+    html.dark {
+      --bg: #0b0f17;
+      --pn: #151d28;
+      --ink: #f1f5f9;
+      --mut: #94a3b8;
+      --ln: #243040;
+      --ac: #38bdf8;
+      --acs: #162838;
+      --ok: #4ade80;
+      --ok-bg: #143522;
+      --wr: #fbbf24;
+      --wr-bg: #38290f;
+      --er: #f87171;
+      --er-bg: #3c1417;
+      --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --btn-text: #081119;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px; line-height: 1.5; padding: 20px 24px;
+      max-width: 100%; margin: 0 auto;
+      transition: background-color 0.25s, color 0.25s;
+    }
+
+    header {
+      margin-bottom: 20px; border-bottom: 1px solid var(--ln);
+      padding-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    }
+
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn-back-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--mut);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--ln);
+      background: var(--pn);
+      transition: all 0.2s;
+    }
+    .btn-back-home:hover {
+      color: var(--ac);
+      border-color: var(--ac);
+      background: var(--acs);
+    }
+
+    .header-logo {
+      height: 44px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      display: block;
+    }
+
+    h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+    .sub { color: var(--mut); font-size: 13.5px; margin-top: 3px; }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+
+    .theme-toggle, .btn-admin, .btn-logout {
+      background: var(--pn); border: 1px solid var(--ln); color: var(--ink);
+      padding: 7px 14px; border-radius: 20px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover, .btn-admin:hover, .btn-logout:hover {
+      border-color: var(--ac); color: var(--ac); background: var(--acs);
+    }
+
+    .user-tag {
+      font-size: 12.5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .user-tag.admin { background: var(--acs); color: var(--ac); }
+    .user-tag.colab { background: var(--ok-bg); color: var(--ok); }
+
+    .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+    .grid.user-only { grid-template-columns: 1fr; max-width: 100%; margin: 0; }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+
+    .pn {
+      background: var(--pn); border: 1px solid var(--ln); border-radius: 12px;
+      padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--card-shadow);
+    }
+    .pn-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--ln); }
+    .badge-num { width: 24px; height: 24px; border-radius: 50%; background: var(--acs); color: var(--ac); font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; }
+    h2 { font-size: 15.5px; font-weight: 600; }
+
+    .form-group { margin-bottom: 12px; }
+    .r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { display: block; font-size: 12.5px; font-weight: 500; color: var(--mut); margin-bottom: 5px; }
+
+    input, select, textarea {
+      width: 100%; padding: 8px 12px; border: 1px solid var(--ln); border-radius: 7px;
+      background: var(--pn); color: var(--ink); font: inherit; font-size: 13.5px;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ac); box-shadow: 0 0 0 3px var(--acs); }
+    input:disabled, select:disabled, textarea:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .filter-wrapper {
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .filter-input {
+      padding: 8px 12px 8px 34px;
+      font-size: 13px;
+      border-radius: 6px;
+      border: 1px solid var(--ln);
+      background: var(--bg);
+    }
+    .filter-icon {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--mut);
+      pointer-events: none;
+    }
+
+    button {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 8px 16px; border-radius: 7px; border: 1px solid var(--ac);
+      background: var(--ac); color: var(--btn-text); cursor: pointer; font: inherit; font-size: 13px; font-weight: 500;
+      transition: all 0.2s;
+    }
+    button.g { background: transparent; border-color: var(--ln); color: var(--ink); }
+    button.g:hover:not(:disabled) { background: var(--acs); border-color: var(--ac); color: var(--ac); }
+    
+    button.action-link { background: transparent; border: none; padding: 4px 6px; font-size: 12.5px; cursor: pointer; }
+    button.action-link.edit { color: var(--ac); }
+    button.action-link.edit:hover { text-decoration: underline; background: var(--acs); border-radius: 4px; }
+    button.action-link.del { color: var(--er); }
+    button.action-link.del:hover { text-decoration: underline; background: var(--er-bg); border-radius: 4px; }
+    
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .msg { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+    .msg.ok { background: var(--ok-bg); color: var(--ok); border-left: 4px solid var(--ok); }
+    .msg.wr { background: var(--wr-bg); color: var(--wr); border-left: 4px solid var(--wr); }
+    .msg.er { background: var(--er-bg); color: var(--er); border-left: 4px solid var(--er); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .chip { padding: 5px 11px; border: 1px solid var(--ln); border-radius: 20px; font-size: 12.5px; cursor: pointer; background: var(--bg); color: var(--ink); }
+    .chip:hover { border-color: var(--ac); background: var(--acs); color: var(--ac); }
+
+    dl { display: grid; grid-template-columns: 130px 1fr; gap: 6px 12px; font-size: 13px; }
+    dt { color: var(--mut); font-weight: 500; }
+    dd { color: var(--ink); font-weight: 600; }
+
+    .tw { overflow-x: auto; border: 1px solid var(--ln); border-radius: 8px; width: 100%; }
+    table { border-collapse: collapse; width: 100%; font-size: 13px; table-layout: auto; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--ln); white-space: normal; word-break: normal; }
+    th { background: var(--bg); color: var(--mut); font-size: 11.5px; text-transform: uppercase; }
+    th.sortable { cursor: pointer; user-select: none; transition: color 0.15s; }
+    th.sortable:hover { color: var(--ac); background: var(--acs); }
+    tbody tr:hover { background: var(--acs); }
+    
+    th[data-key="data_lancamento"], td:nth-child(1),
+    th[data-key="codigo_aluno"], td:nth-child(3),
+    th[data-key="codigo_modelo"], td:nth-child(6),
+    th:last-child, td:last-child {
+      white-space: nowrap;
+    }
+
+    .hint { font-size: 12px; color: var(--mut); margin-top: 8px; }
+    .bar { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-container">
+      <a href="/" class="btn-back-home" title="Voltar para a seleção de módulos">
+        &larr; Início
+      </a>
+      <img src="{{ url_for('static', filename='logo.png') }}" 
+           alt="Logo da Empresa" 
+           class="header-logo"
+           onerror="this.style.display='none'">
+      <div>
+        <h1>{{ modulo_info.nome }}</h1>
+        <p class="sub">{{ modulo_info.subtitulo }}</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <span class="user-tag {{ 'admin' if is_admin else 'colab' }}">
+        {{ 'Administrador' if is_admin else 'Colaborador' }}
+      </span>
+      <a href="/logout" class="btn-logout" title="Encerrar sessão">
+        Sair
+      </a>
+      <button id="themeBtn" class="theme-toggle" type="button">
+        <span id="themeIcon">☀</span>
+        <span id="themeLabel">Modo Claro</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="mainGrid" class="grid user-only">
+    
+    <!-- COLUNA ADMIN -->
+    <div id="adminCol" style="display: none;">
+      <section class="pn">
+        <div class="pn-header" style="justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="badge-num">1</span>
+            <h2>Base de Provas (Banco Fixo)</h2>
+          </div>
+          <button id="btnDelBase" class="action-link del" type="button" style="display: none;">Excluir Base</button>
+        </div>
+        <input type="file" id="f" accept=".csv">
+        <div id="baseMsg" class="hint">A verificar estado da base de dados...</div>
+      </section>
+
+      <section class="pn">
+        <div class="pn-header">
+          <span class="badge-num">2</span>
+          <h2>Parâmetros do Lote</h2>
+        </div>
+        <div class="form-group">
+          <label>Nome do agendamento</label>
+          <input id="b_nome" placeholder="Ex.: Provas 2026/2">
+        </div>
+        <div class="r2 form-group">
+          <div><label>Data da prova</label><input type="date" id="b_data"></div>
+          <div><label>Hora da prova</label><input type="time" id="b_hora"></div>
+        </div>
+        <div class="r2 form-group">
+          <div><label>Data final agendamento</label><input type="date" id="b_dfa"></div>
+          <div><label>Hora final</label><input type="time" id="b_hfa"></div>
+        </div>
+        <div class="r2 form-group">
+          <div><label>Monitoramento</label><input id="b_mon"></div>
+          <div><label>Navegador seguro</label><input id="b_nav"></div>
+        </div>
+        <div class="r2 form-group">
+          <div><label>Bloquear IPs</label><input id="b_ip"></div>
+          <div><label>Modo de aplicação</label><input id="b_modo"></div>
+        </div>
+        <div class="r2 form-group">
+          <div><label>Data publicação nota</label><input type="date" id="b_dpn"></div>
+          <div><label>Hora publicação</label><input type="time" id="b_hpn"></div>
+        </div>
+        <div class="form-group">
+          <label>Tipo de liberação da prova</label>
+          <input id="b_lib">
+        </div>
+      </section>
+    </div>
+
+    <!-- COLUNA PRINCIPAL -->
+    <div>
+      <section class="pn">
+        <div class="pn-header">
+          <span class="badge-num">⚡</span>
+          <h2 id="formTitle">Lançar Aluno</h2>
+        </div>
+        <div class="r2 form-group">
+          <div><label>ID do Aluno</label><input id="i_al" inputmode="numeric" placeholder="Digite o ID..." autocomplete="off"></div>
+          <div><label>ID da Disciplina</label><input id="i_di" inputmode="numeric" placeholder="Digite ou selecione..." autocomplete="off"></div>
+        </div>
+
+        <div id="chips" class="chips"></div>
+        <div id="pick"></div>
+        <div id="prev"></div>
+
+        <!-- Responsável pelo Lançamento com auto-seleção -->
+        <div class="form-group" style="margin-top: 12px;">
+          <label>Responsável pelo Lançamento</label>
+          <select id="i_resp">
+            <option value="">Selecione o responsável...</option>
+            <option value="Amanda">Amanda</option>
+            <option value="Marilia">Marilia</option>
+            <option value="Victor">Victor</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-top: 12px;">
+          <label>Justificativa / Protocolo</label>
+          <textarea id="i_j" rows="2" placeholder="Descreva a justificativa ou protocolo acadêmico..."></textarea>
+        </div>
+        <div class="bar">
+          <button id="add" disabled type="button">Adicionar à Fila</button>
+          <button id="btnCancelEdit" class="g" style="display: none;" type="button">Cancelar Edição</button>
+        </div>
+      </section>
+
+      <section class="pn">
+        <div class="pn-header" style="justify-content: space-between;">
+          <h2>Fila (<span id="n">0</span>)</h2>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="btnSortAlpha" class="action-link edit" type="button" title="Organizar de A a Z por Nome">🔤 Ordenar A-Z</button>
+            <button id="clr" class="action-link del" style="display: none;" disabled type="button">Limpar fila inteira</button>
+          </div>
+        </div>
+
+        <div class="filter-wrapper">
+          <span class="filter-icon">🔍</span>
+          <input type="text" id="qFilter" class="filter-input" placeholder="Filtrar por ID do aluno, nome, disciplina, polo ou responsável...">
+        </div>
+
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th class="sortable" data-key="data_lancamento">Lançado em <span class="sort-indicator">⬍</span></th>
+                <th class="sortable" data-key="resp">Responsável <span class="sort-indicator">⬍</span></th>
+                <th class="sortable" data-key="codigo_aluno">Aluno <span class="sort-indicator">⬍</span></th>
+                <th class="sortable" data-key="nome_aluno">Nome <span class="sort-indicator">⬍</span></th>
+                <th class="sortable" data-key="nome_academico">Disciplina <span class="sort-indicator">⬍</span></th>
+                <th class="sortable" data-key="codigo_modelo">Modelo <span class="sort-indicator">⬍</span></th>
+                <th class="sortable" data-key="nome_polo">Nome_Polo <span class="sort-indicator">⬍</span></th>
+                <th class="sortable" data-key="nome_local">Local <span class="sort-indicator">⬍</span></th>
+                <th style="text-align: right;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="q"></tbody>
+          </table>
+        </div>
+        <div id="exMsg"></div>
+        <div class="bar">
+          <button id="xls" disabled type="button">Exportar .xls (Excel)</button>
+          <button id="csv" class="g" disabled type="button">Exportar .csv</button>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const MODULO_ID = "{{ modulo_id }}";
+      const EXPORT_PREFIX = "{{ modulo_info.export_prefix }}";
+
+      const HEAD = ['polo','nome','data','hora','tipo','turno','codigo_modelo','nome_modelo','formato','codigo_academico','nome_academico','codigo_aluno','nome_aluno','codigo_local','nome_local','duracao','data_final_agendamento','hora_final_agendamento','tempo_para_iniciar_prova','monitoramento','navegador_seguro','bloquear_ips','modo_aplicacao','data_de_publicacao_de_nota','hora_de_publicacao_de_nota','tipo_liberacao_prova'];
+      const $ = id => document.getElementById(id);
+      const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+      const msg = (type, text) => `<div class="msg ${type}">${text}</div>`;
+      const fd = v => v ? v.split('-').reverse().join('/') : '';
+
+      let QUEUE = [], CUR = null, currentStudentData = null, IS_ADMIN = false;
+      let editIndex = null;
+      let currentSort = { key: null, asc: true };
+
+      // Tema
+      const themeBtn = $('themeBtn');
+      const themeIcon = $('themeIcon');
+      const themeLabel = $('themeLabel');
+
+      function applyTheme(theme) {
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+          if (themeIcon) themeIcon.textContent = '🌙';
+          if (themeLabel) themeLabel.textContent = 'Modo Escuro';
+        } else {
+          document.documentElement.classList.remove('dark');
+          if (themeIcon) themeIcon.textContent = '☀';
+          if (themeLabel) themeLabel.textContent = 'Modo Claro';
+        }
+        localStorage.setItem('amparo_theme', theme);
+      }
+      applyTheme(localStorage.getItem('amparo_theme') || 'light');
+      if (themeBtn) {
+        themeBtn.onclick = () => applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark');
+      }
+
+      function setAdminState(isAdmin) {
+        IS_ADMIN = !!isAdmin;
+        const adminCol = $('adminCol');
+        const mainGrid = $('mainGrid');
+        const clrBtn = $('clr');
+
+        if (IS_ADMIN) {
+          if (adminCol) adminCol.style.display = 'block';
+          if (mainGrid) mainGrid.classList.remove('user-only');
+          if (clrBtn) clrBtn.style.display = 'inline-block';
+          checkServerDB();
+          loadBatchFromServer();
+        } else {
+          if (adminCol) adminCol.style.display = 'none';
+          if (mainGrid) mainGrid.classList.add('user-only');
+          if (clrBtn) clrBtn.style.display = 'none';
+        }
+        renderQueue();
+      }
+
+      async function checkAuth() {
+        try {
+          const res = await fetch('/api/auth/status');
+          const data = await res.json();
+          setAdminState(data.is_admin);
+        } catch(e) {
+          setAdminState(false);
+        }
+      }
+
+      async function checkServerDB() {
+        try {
+          const res = await fetch('/api/status_base');
+          const data = await res.json();
+          const btnDel = $('btnDelBase');
+          const baseMsg = $('baseMsg');
+
+          if (data.carregada) {
+            if (baseMsg) baseMsg.innerHTML = `<span style="color:var(--ok)">✓ Base ativa: <b>${data.total_alunos.toLocaleString('pt-BR')}</b> alunos cadastrados.</span>`;
+            if (IS_ADMIN && btnDel) btnDel.style.display = 'inline-block';
+          } else {
+            if (baseMsg) baseMsg.innerHTML = `<span style="color:var(--wr)">Nenhuma base encontrada. Suba um .csv acima.</span>`;
+            if (btnDel) btnDel.style.display = 'none';
+          }
+        } catch (err) {
+          const baseMsg = $('baseMsg');
+          if (baseMsg) baseMsg.innerHTML = msg('er', 'Erro de ligação à base de dados.');
+        }
+      }
+
+      const fileInput = $('f');
+      if (fileInput) {
+        fileInput.onchange = async e => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const fdData = new FormData();
+          fdData.append('file', file);
+          const baseMsg = $('baseMsg');
+          if (baseMsg) baseMsg.textContent = 'A processar base no SQLite...';
+
+          try {
+            const res = await fetch('/api/upload_base', { method: 'POST', body: fdData });
+            const result = await res.json();
+            if (result.success) {
+              if (baseMsg) baseMsg.innerHTML = `<span style="color:var(--ok)">✓ <b>${result.alunos.toLocaleString('pt-BR')}</b> alunos gravados no banco.</span>`;
+              checkServerDB();
+              refresh();
+            } else {
+              if (baseMsg) baseMsg.innerHTML = msg('er', result.error);
+            }
+          } catch (err) {
+            if (baseMsg) baseMsg.innerHTML = msg('er', 'Erro ao enviar o ficheiro.');
+          }
+        };
+      }
+
+      const btnDelBase = $('btnDelBase');
+      if (btnDelBase) {
+        btnDelBase.onclick = async () => {
+          if (!IS_ADMIN) return;
+          if (!confirm('Deseja realmente excluir toda a base de dados do servidor?')) return;
+
+          const baseMsg = $('baseMsg');
+          if (baseMsg) baseMsg.textContent = 'A excluir registos...';
+          try {
+            const res = await fetch('/api/limpar_base', { method: 'POST' });
+            const result = await res.json();
+            if (result.success) {
+              if ($('f'))$('f').value = '';
+              currentStudentData = null;
+              checkServerDB();
+              refresh();
+            }
+          } catch (err) {
+            if (baseMsg) baseMsg.innerHTML = msg('er', 'Erro ao excluir a base.');
+          }
+        };
+      }
+
+      async function loadQueueFromServer() {
+        try {
+          const res = await fetch(`/api/fila?modulo=${encodeURIComponent(MODULO_ID)}`);
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            QUEUE = data;
+            renderQueue();
+          }
+        } catch(e) {}
+      }
+
+      async function loadBatchFromServer() {
+        try {
+          const res = await fetch(`/api/lote?modulo=${encodeURIComponent(MODULO_ID)}`);
+          const b = await res.json();
+          if (b && typeof b === 'object') {
+            Object.keys(b).forEach(k => {
+              const el = $(k);
+              if (el) el.value = b[k];
+            });
+          }
+        } catch(e) {}
+      }
+
+      let timeoutId = null;
+      async function refresh() {
+        CUR = null;
+        if ($('pick'))$('pick').innerHTML = '';
+        if ($('prev'))$('prev').innerHTML = '';
+        if ($('chips'))$('chips').innerHTML = '';
+        if ($('add'))$('add').disabled = true;
+
+        const al = $('i_al') ?$('i_al').value.trim() : '';
+        const di = $('i_di') ?$('i_di').value.trim() : '';
+        if (!al) return;
+
+        if (!currentStudentData || currentStudentData.aluno_id !== al) {
+          const res = await fetch(`/api/busca_aluno?aluno=${encodeURIComponent(al)}`);
+          const data = await res.json();
+          if (data.status === 'sem_aluno') {
+            if ($('prev'))$('prev').innerHTML = msg('er', 'Aluno não encontrado na base de dados.');
+            currentStudentData = null;
+            return;
+          }
+          currentStudentData = { aluno_id: al, ...data };
+        }
+
+        const inQueue = c => QUEUE.some((x, idx) => x.o && x.o.codigo_aluno === al && x.o.disciplina_codigo === c && idx !== editIndex);
+        const chipsHTML = currentStudentData.disciplinas.map(d => `
+          <span class="chip" data-c="${esc(d.codigo)}"${inQueue(d.codigo) ? ' style="opacity:0.55; text-decoration:line-through;"' : ''}>
+            ${inQueue(d.codigo) ? '✓ ' : ''}${esc(d.codigo)} · ${esc(d.nome)}
+          </span>
+        `).join('');
+
+        if (!di) {
+          if ($('prev'))$('prev').innerHTML = msg('ok', `<b>${esc(currentStudentData.nome_aluno)}</b> possui ${currentStudentData.disciplinas.length} disciplina(s):`);
+          if ($('chips'))$('chips').innerHTML = chipsHTML;
+          bindChips();
+          return;
+        }
+
+        const matchingRecords = currentStudentData.registros.filter(r => r.disciplina_codigo === di);
+        if (!matchingRecords.length) {
+          if ($('prev'))$('prev').innerHTML = msg('er', 'O aluno não possui esta disciplina na base. Disciplinas ativas:');
+          if ($('chips'))$('chips').innerHTML = chipsHTML;
+          bindChips();
+          return;
+        }
+
+        if (inQueue(di)) {
+          if ($('prev'))$('prev').innerHTML = msg('wr', 'Esta disciplina já está na fila para este aluno.');
+          return;
+        }
+
+        let selected = matchingRecords[0];
+        if (matchingRecords.length > 1) {
+          if ($('pick')) {$('pick').innerHTML = msg('wr', 'Mais do que um polo/local encontrado. Selecione qual utilizar:') + `
+              <select id="sel" style="margin-top:6px;">
+                ${matchingRecords.map((opt, i) => `<option value="${i}">Local: ${esc(opt.nome_local)} (${esc(opt.codigo_local)}) · Polo ${esc(opt.nome_polo || opt.polo)}</option>`).join('')}
+              </select>`;
+            const selEl = $('sel');
+            if (selEl) selEl.onchange = () => showDetails(matchingRecords[selEl.value]);
+          }
+        }
+
+        showDetails(selected);
+      }
+
+      function showDetails(opt) {
+        CUR = opt;
+        const exibPolo = opt.nome_polo || opt.polo || '-';
+        if ($('prev')) {$('prev').innerHTML = `
+            <div class="msg ok">
+              <dl>
+                <dt>Aluno:</dt><dd>${esc(opt.nome_aluno)}</dd>
+                <dt>Disciplina:</dt><dd>${esc(opt.nome_academico)}</dd>
+                <dt>Modelo:</dt><dd>${esc(opt.codigo_modelo)} · ${esc(opt.nome_modelo)}</dd>
+                <dt>Nome_Polo:</dt><dd>${esc(exibPolo)}</dd>
+                <dt>Local:</dt><dd>${esc(opt.nome_local)} (${esc(opt.codigo_local)})</dd>
+                <dt>Duração:</dt><dd>${esc(opt.duracao)} min (tolerância: ${esc(opt.tempo_para_iniciar_prova)} min)</dd>
+              </dl>
+            </div>
+          `;
+        }
+        if ($('add'))$('add').disabled = false;
+      }
+
+      function bindChips() {
+        document.querySelectorAll('.chip').forEach(c => {
+          c.onclick = () => {
+            if ($('i_di'))$('i_di').value = c.dataset.c;
+            refresh();
+          };
+        });
+      }
+
+      ['i_al', 'i_di'].forEach(id => {
+        const el = $(id);
+        if (el) {
+          el.oninput = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(refresh, 250);
+          };
+        }
+      });
+
+      function startEdit(index) {
+        editIndex = index;
+        const item = QUEUE[index];
+        if ($('formTitle'))$('formTitle').textContent = `Editar Aluno (${item.o.codigo_aluno})`;
+        if ($('add'))$('add').textContent = 'Guardar Alterações';
+        if ($('btnCancelEdit'))$('btnCancelEdit').style.display = 'inline-flex';
+
+        if ($('i_al'))$('i_al').value = item.o.codigo_aluno;
+        if ($('i_di'))$('i_di').value = item.o.disciplina_codigo;
+        if ($('i_resp'))$('i_resp').value = item.resp || ''; 
+        if ($('i_j'))$('i_j').value = item.j || '';
+
+        refresh();
+        const alEl = $('i_al');
+        if (alEl) window.scrollTo({ top: alEl.offsetTop - 20, behavior: 'smooth' });
+      }
+
+      const btnCancelEdit = $('btnCancelEdit');
+      if (btnCancelEdit) btnCancelEdit.onclick = resetEditMode;
+
+      function resetEditMode() {
+        editIndex = null;
+        if ($('formTitle'))$('formTitle').textContent = 'Lançar Aluno';
+        if ($('add'))$('add').textContent = 'Adicionar à Fila';
+        if ($('btnCancelEdit'))$('btnCancelEdit').style.display = 'none';
+        if ($('i_al'))$('i_al').value = '';
+        if ($('i_di'))$('i_di').value = '';
+        if ($('i_resp'))$('i_resp').value = '';
+        if ($('i_j'))$('i_j').value = '';
+        refresh();
+      }
+
+      const addBtn = $('add');
+      if (addBtn) {
+        addBtn.onclick = async () => {
+          if (!CUR) return;
+
+          const resp = $('i_resp') ?$('i_resp').value.trim() : '';
+          if (!resp) {
+            alert('Por favor, selecione o Responsável pelo Lançamento.');
+            if ($('i_resp'))$('i_resp').focus();
+            return;
+          }
+
+          const agora = new Date().toLocaleString('pt-BR');
+          const record = {
+            o: CUR,
+            j: $('i_j') ?$('i_j').value.trim() : '',
+            resp: resp,
+            data_lancamento: (editIndex !== null && QUEUE[editIndex] && QUEUE[editIndex].data_lancamento) ? QUEUE[editIndex].data_lancamento : agora
+          };
+
+          if (editIndex !== null) {
+            const itemToUpdate = QUEUE[editIndex];
+            const res = await fetch(`/api/fila/${itemToUpdate.db_id}`, {
+              method: 'PUT',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify(record)
+            });
+            const out = await res.json();
+            QUEUE[editIndex] = out.item;
+            resetEditMode();
+          } else {
+            const res = await fetch(`/api/fila?modulo=${encodeURIComponent(MODULO_ID)}`, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify(record)
+            });
+            const out = await res.json();
+            QUEUE.push(out.item);
+            if ($('i_di'))$('i_di').value = '';
+            if ($('i_j'))$('i_j').value = '';
+            refresh();
+            if ($('i_di'))$('i_di').focus();
+          }
+
+          renderQueue();
+        };
+      }
+
+      function parseBRDate(str) {
+        if (!str) return 0;
+        const parts = String(str).split(/[\s,]+/);
+        if (!parts[0]) return 0;
+        const dParts = parts[0].split('/');
+        if (dParts.length < 3) return 0;
+        const [d, m, y] = dParts;
+        const time = parts[1] || '00:00:00';
+        const [hh = '00', mm = '00', ss = '00'] = time.split(':');
+        const dt = new Date(+y, +m - 1, +d, +hh, +mm, +ss);
+        return isNaN(dt.getTime()) ? 0 : dt.getTime();
+      }
+
+      function sortQueueBy(key) {
+        if (currentSort.key === key) {
+          currentSort.asc = !currentSort.asc;
+        } else {
+          currentSort.key = key;
+          currentSort.asc = true;
+        }
+
+        QUEUE.sort((a, b) => {
+          let valA = (key === 'resp' || key === 'data_lancamento') ? (a[key] || '') : ((a.o && a.o[key]) || '');
+          let valB = (key === 'resp' || key === 'data_lancamento') ? (b[key] || '') : ((b.o && b.o[key]) || '');
+
+          let cmp = 0;
+          if (key === 'data_lancamento') {
+            cmp = parseBRDate(valA) - parseBRDate(valB);
+          } else if (!isNaN(valA) && !isNaN(valB) && String(valA).trim() !== '' && String(valB).trim() !== '') {
+            cmp = Number(valA) - Number(valB);
+          } else {
+            cmp = String(valA).trim().localeCompare(String(valB).trim(), 'pt-BR', { sensitivity: 'base', numeric: true });
+          }
+          return currentSort.asc ? cmp : -cmp;
+        });
+
+        renderQueue();
+      }
+
+      document.querySelectorAll('th.sortable').forEach(th => {
+        th.onclick = () => sortQueueBy(th.dataset.key);
+      });
+
+      const btnSortAlpha = $('btnSortAlpha');
+      if (btnSortAlpha) {
+        btnSortAlpha.onclick = () => sortQueueBy('nome_aluno');
+      }
+
+      function renderQueue() {
+        const filterEl = $('qFilter');
+        const filterText = filterEl && filterEl.value ? filterEl.value.toLowerCase().trim() : '';
+
+        document.querySelectorAll('th.sortable').forEach(th => {
+          const ind = th.querySelector('.sort-indicator');
+          if (!ind) return;
+          if (th.dataset.key === currentSort.key) {
+            ind.textContent = currentSort.asc ? '▲' : '▼';
+            th.style.color = 'var(--ac)';
+          } else {
+            ind.textContent = '⬍';
+            th.style.color = '';
+          }
+        });
+
+        const filtered = QUEUE
+          .map((item, originalIndex) => ({ item, originalIndex }))
+          .filter(({ item }) => {
+            if (!filterText) return true;
+            const al = (item.o && item.o.codigo_aluno || '').toLowerCase();
+            const nome = (item.o && item.o.nome_aluno || '').toLowerCase();
+            const disc = (item.o && item.o.nome_academico || '').toLowerCase();
+            const codDisc = (item.o && item.o.disciplina_codigo || '').toLowerCase();
+            const poloCod = (item.o && item.o.polo || '').toLowerCase();
+            const poloNome = (item.o && item.o.nome_polo || '').toLowerCase();
+            const resp = (item.resp || '').toLowerCase();
+            return al.includes(filterText) || nome.includes(filterText) || disc.includes(filterText) || 
+                   codDisc.includes(filterText) || poloCod.includes(filterText) || poloNome.includes(filterText) || resp.includes(filterText);
+          });
+
+        if ($('n')) {$('n').textContent = filterText ? `${filtered.length} de ${QUEUE.length}` : QUEUE.length;
+        }
+
+        const tbody = $('q');
+        if (!tbody) return;
+
+        if (!QUEUE.length) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:18px; color:var(--mut);">Nenhum agendamento na fila.</td></tr>';
+        } else if (!filtered.length) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:18px; color:var(--mut);">Nenhum resultado encontrado para o filtro digitado.</td></tr>';
+        } else {
+          tbody.innerHTML = filtered.map(({ item, originalIndex }) => `
+            <tr>
+              <td style="color:var(--mut); font-size:12px;">${esc(item.data_lancamento || '-')}</td>
+              <td>${esc(item.resp || '-')}</td>
+              <td><b>${esc(item.o && item.o.codigo_aluno)}</b></td>
+              <td>${esc(item.o && item.o.nome_aluno)}</td>
+              <td>${esc(item.o && item.o.nome_academico)}</td>
+              <td>${esc(item.o && item.o.codigo_modelo)}</td>
+              <td>${esc((item.o && (item.o.nome_polo || item.o.polo)) || '-')}</td>
+              <td>${esc(item.o && item.o.nome_local)}</td>
+              <td style="text-align: right; gap: 4px;">
+                <button class="action-link edit" data-edit="${originalIndex}">Editar</button>
+                ${IS_ADMIN ? `<button class="action-link del" data-del="${item.db_id}">Excluir</button>` : ''}
+              </td>
+            </tr>
+          `).join('');
+        }
+
+        document.querySelectorAll('#q button[data-edit]').forEach(btn => {
+          btn.onclick = () => startEdit(+btn.dataset.edit);
+        });
+
+        if (IS_ADMIN) {
+          document.querySelectorAll('#q button[data-del]').forEach(btn => {
+            btn.onclick = async () => {
+              const dbId = +btn.dataset.del;
+              await fetch(`/api/fila/${dbId}`, { method: 'DELETE' });
+              QUEUE = QUEUE.filter(x => x.db_id !== dbId);
+              renderQueue();
+              refresh();
+            };
+          });
+        }
+
+        if ($('xls')) $('xls').disabled = !QUEUE.length;
+        if ($('csv')) $('csv').disabled = !QUEUE.length;
+        if ($('clr')) $('clr').disabled = !QUEUE.length;
+      }
+
+      const qFilter = $('qFilter');
+      if (qFilter) qFilter.addEventListener('input', renderQueue);
+
+      const getBatch = () => ({
+        b_nome: $('b_nome') ? $('b_nome').value.trim() : '',
+        b_data: $('b_data') ? $('b_data').value : '',
+        b_hora: $('b_hora') ? $('b_hora').value : '',
+        b_dfa: $('b_dfa') ? $('b_dfa').value : '',
+        b_hfa: $('b_hfa') ? $('b_hfa').value : '',
+        b_mon: $('b_mon') ? $('b_mon').value.trim() : '',
+        b_nav: $('b_nav') ? $('b_nav').value.trim() : '',
+        b_ip: $('b_ip') ? $('b_ip').value.trim() : '',
+        b_modo: $('b_modo') ? $('b_modo').value.trim() : '',
+        b_dpn: $('b_dpn') ? $('b_dpn').value : '',
+        b_hpn: $('b_hpn') ? $('b_hpn').value : '',
+        b_lib: $('b_lib') ? $('b_lib').value.trim() : ''
+      });
+
+      function checkBatch() {
+        const b = getBatch();
+        if (!b.b_data || !b.b_hora) {
+          if ($('exMsg')) $('exMsg').innerHTML = msg('er', 'Atenção: A data e a hora da prova devem ser configuradas pelo Administrador nos parâmetros do lote.');
+          return null;
+        }
+        if ($('exMsg')) $('exMsg').innerHTML = '';
+        return {
+          nome: b.b_nome, data: b.b_data, hora: b.b_hora, dfa: b.b_dfa, hfa: b.b_hfa,
+          mon: b.b_mon, nav: b.b_nav, ip: b.b_ip, modo: b.b_modo, dpn: b.b_dpn,
+          hpn: b.b_hpn, lib: b.b_lib
+        };
+      }
+
+      function buildRow(item, batch) {
+        const m = {
+          ...item,
+          nome: batch.nome,
+          data: fd(batch.data),
+          hora: batch.hora,
+          data_final_agendamento: fd(batch.dfa),
+          hora_final_agendamento: batch.hfa,
+          monitoramento: batch.mon,
+          navegador_seguro: batch.nav,
+          bloquear_ips: batch.ip,
+          modo_aplicacao: batch.modo,
+          data_de_publicacao_de_nota: fd(batch.dpn),
+          hora_de_publicacao_de_nota: batch.hpn,
+          tipo_liberacao_prova: batch.lib
+        };
+        return HEAD.map(k => m[k] == null ? '' : String(m[k]));
+      }
+
+      const clrBtn = $('clr');
+      if (clrBtn) {
+        clrBtn.onclick = async () => {
+          if (!IS_ADMIN) return;
+          if (confirm(`Remover todos os ${QUEUE.length} registos da fila?`)) {
+            await fetch(`/api/fila/limpar?modulo=${encodeURIComponent(MODULO_ID)}`, { method: 'POST' });
+            QUEUE = [];
+            resetEditMode();
+            if ($('qFilter')) $('qFilter').value = '';
+            renderQueue();
+            refresh();
+          }
+        };
+      }
+
+      const csvBtn = $('csv');
+      if (csvBtn) {
+        csvBtn.onclick = () => {
+          const b = checkBatch();
+          if (!b) return;
+          const escapeCSV = v => /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+          const t = '\uFEFF' + [HEAD, ...QUEUE.map(x => buildRow(x.o, b))].map(r => r.map(escapeCSV).join(',')).join('\r\n');
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([t], { type: 'text/csv;charset=utf-8' }));
+          a.download = `${EXPORT_PREFIX}.csv`;
+          a.click();
+          if ($('exMsg')) $('exMsg').innerHTML = msg('ok', `${QUEUE.length} agendamentos exportados em CSV.`);
+        };
+      }
+
+      const xlsBtn = $('xls');
+      if (xlsBtn) {
+        xlsBtn.onclick = () => {
+          const b = checkBatch();
+          if (!b) return;
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([HEAD, ...QUEUE.map(x => buildRow(x.o, b))]), 'agendamento');
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+            ['codigo_aluno', 'nome_aluno', 'codigo_disciplina', 'nome_academico', 'codigo_local', 'nome_local', 'responsavel', 'justificativa', 'data_lancamento'],
+            ...QUEUE.map(x => [x.o.codigo_aluno, x.o.nome_aluno, x.o.disciplina_codigo, x.o.nome_academico, x.o.codigo_local, x.o.nome_local, x.resp || '', x.j || '', x.data_lancamento || ''])
+          ]), 'controle');
+          XLSX.writeFile(wb, `${EXPORT_PREFIX}.xls`, { bookType: 'biff8' });
+          if ($('exMsg')) $('exMsg').innerHTML = msg('ok', `${QUEUE.length} agendamentos exportados em XLS.`);
+        };
+      }
+
+      let batchSaveTimer = null;
+      document.querySelectorAll('[id^=b_]').forEach(el => {
+        el.addEventListener('input', () => {
+          if (!IS_ADMIN) return;
+          clearTimeout(batchSaveTimer);
+          batchSaveTimer = setTimeout(() => {
+            fetch(`/api/lote?modulo=${encodeURIComponent(MODULO_ID)}`, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify(getBatch())
+            });
+          }, 500);
+        });
+      });
+
+      // Inicialização
+      checkAuth();
+      loadQueueFromServer();
+    });
+  </script>
+</body>
+</html>

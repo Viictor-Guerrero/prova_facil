@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prova Fácil</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --pn: #ffffff;
+      --ink: #0f172a;
+      --mut: #64748b;
+      --ln: #e2e8f0;
+      --ac: #0284c7;
+      --acs: #e0f2fe;
+      --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    }
+
+    html.dark {
+      --bg: #0b0f17;
+      --pn: #151d28;
+      --ink: #f1f5f9;
+      --mut: #94a3b8;
+      --ln: #243040;
+      --ac: #38bdf8;
+      --acs: #162838;
+      --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px 40px;
+      transition: background-color 0.25s, color 0.25s;
+    }
+
+    .top-bar {
+      width: 100%;
+      max-width: 1020px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      color: var(--mut);
+    }
+
+    .user-badge {
+      font-size: 11.5px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      background: var(--acs);
+      color: var(--ac);
+      font-weight: 600;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-toggle, .btn-logout {
+      background: var(--pn);
+      border: 1px solid var(--ln);
+      color: var(--ink);
+      padding: 7px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      box-shadow: var(--card-shadow);
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover, .btn-logout:hover {
+      border-color: var(--ac);
+      color: var(--ac);
+      background: var(--acs);
+    }
+
+    .brand-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 36px;
+      text-align: center;
+    }
+
+    .header-logo {
+      height: 60px;
+      width: auto;
+      max-width: 240px;
+      object-fit: contain;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    p.subtitle {
+      color: var(--mut);
+      font-size: 15px;
+      max-width: 520px;
+    }
+
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 320px));
+      gap: 24px;
+      width: 100%;
+      max-width: 1020px;
+      justify-content: center;
+    }
+
+    .card {
+      background: var(--pn);
+      border: 1px solid var(--ln);
+      border-radius: 14px;
+      padding: 28px 24px;
+      box-shadow: var(--card-shadow);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--ac);
+      box-shadow: 0 20px 25px -5px rgba(2, 132, 199, 0.15), 0 10px 10px -5px rgba(2, 132, 199, 0.05);
+    }
+
+    .icon-badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: var(--acs);
+      color: var(--ac);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 18px;
+    }
+
+    .card h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--ink);
+    }
+
+    .card p {
+      font-size: 13.5px;
+      color: var(--mut);
+      line-height: 1.5;
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+
+    .action-badge {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ac);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card:hover .action-badge {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="user-info">
+      <span>Conectado como: <strong style="color: var(--ink);">{{ nome_usuario }}</strong></span>
+      <span class="user-badge">{{ 'Administrador' if is_admin else 'Colaborador' }}</span>
+    </div>
+
+    <div class="top-actions">
+      <a href="/logout" class="btn-logout" title="Sair do sistema">
+        🚪 Sair
+      </a>
+      <button id="themeBtn" class="theme-toggle" type="button">
+        <span id="themeIcon">☀</span>
+        <span id="themeLabel">Modo Claro</span>
+      </button>
+    </div>
+  </div>
+
+  <header class="brand-header">
+    <img src="{{ url_for('static', filename='logo.png') }}" 
+         alt="Logo da Instituição" 
+         class="header-logo"
+         onerror="this.style.display='none'">
+    <h1>Provas</h1>
+    <p class="subtitle">Escolha a área desejada para realizar o lançamento!</p>
+  </header>
+
+  <main class="grid-cards">
+    <!-- Card 1: Amparo Legal -->
+    <a href="/agendador/amparo" class="card">
+      <div class="icon-badge">⚖️</div>
+      <h2>Amparo Legal</h2>
+      <p>Lançamentos e consultas!</p>
+      <span class="action-badge">Clique para acessar &rarr;</span>
+    </a>
+
+    <!-- Card 2: 2º Trimestre -->
+    <a href="/agendador/provas_2tri" class="card">
+      <div class="icon-badge">📅</div>
+      <h2>Provas 2º Trimestre</h2>
+      <p>Lançamentos e consultas!</p>
+      <span class="action-badge">Clique para acessar &rarr;</span>
+    </a>
+
+    <!-- Card 3: Provas Online -->
+    <a href="/agendador/provas_online" class="card">
+      <div class="icon-badge">🌐</div>
+      <h2>Provas Online</h2>
+      <p>Lançamentos e consultas!</p>
+      <span class="action-badge">Clique para acessar &rarr;</span>
+    </a>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeBtn = document.getElementById('themeBtn');
+      const themeIcon = document.getElementById('themeIcon');
+      const themeLabel = document.getElementById('themeLabel');
+
+      function applyTheme(theme) {
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+          if (themeIcon) themeIcon.textContent = '🌙';
+          if (themeLabel) themeLabel.textContent = 'Modo Escuro';
+        } else {
+          document.documentElement.classList.remove('dark');
+          if (themeIcon) themeIcon.textContent = '☀';
+          if (themeLabel) themeLabel.textContent = 'Modo Claro';
+        }
+        localStorage.setItem('amparo_theme', theme);
+      }
+
+      applyTheme(localStorage.getItem('amparo_theme') || 'light');
+
+      if (themeBtn) {
+        themeBtn.onclick = () => {
+          const isDark = document.documentElement.classList.contains('dark');
+          applyTheme(isDark ? 'light' : 'dark');
+        };
+      }
+    });
+  </script>
+</body>
+</html>
